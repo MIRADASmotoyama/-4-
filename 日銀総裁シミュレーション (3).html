@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>めざせ名総裁！日銀マネー・ループ RPG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Maru+Gothic:wght@400;500;700;900&family=Kaisei+Decol:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1c2340;
+    --sub:#5b6788;
+
+    --border-blue:#4a90d9;
+    --border-blue-deep:#2f6fb0;
+    --panel:#ffffff;
+    --panel-blue:#eef7ff;
+    --panel-cream:#fff8e6;
+
+    --accent-gold:#f4b400;
+    --accent-gold-deep:#d99a00;
+    --accent-pink:#ff6fa5;
+    --accent-green:#3fa772;
+    --accent-red:#e0533d;
+
+    --plaza:#fbeecb;
+    --plaza-line:#f0dba8;
+
+    --c-extreme-cold:#3f7fc1;
+    --c-cool:#63a9ea;
+    --c-ok:#3fa772;
+    --c-warm:#f2a93b;
+    --c-hot:#e0533d;
+    --happy:#3fa772;
+    --sad:#e0533d;
+    --neutral:#9098a8;
+
+    --pixel-font:'DotGothic16', monospace;
+    --body-font:'Zen Maru Gothic', sans-serif;
+    --display-font:'Kaisei Decol', serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, rgba(255,214,110,0.35), transparent 45%),
+      radial-gradient(circle at 100% 10%, rgba(120,190,255,0.35), transparent 50%),
+      linear-gradient(180deg, #fff6db 0%, #eaf6ff 55%, #dff0ff 100%);
+    font-family:var(--body-font);
+    color:var(--ink);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{ max-width:980px; margin:0 auto; padding:16px 12px 50px; }
+
+  .brandbar{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    color:var(--accent-gold-deep); font-family:var(--pixel-font); letter-spacing:0.08em;
+    font-size:12px; padding:10px 0 16px;
+  }
+  .brandbar .line{flex:1;height:1px;background:linear-gradient(90deg, transparent, rgba(217,154,0,0.5), transparent);}
+
+  /* ---------- generic window (bright, pixel-cornered) ---------- */
+  .rpgwin{
+    background:var(--panel);
+    border:3px solid var(--border-blue);
+    box-shadow:0 0 0 3px #ffffff, 0 8px 18px rgba(74,144,217,0.2);
+    border-radius:10px;
+    color:var(--ink);
+    position:relative;
+  }
+  .rpgwin .winhead{
+    font-family:var(--pixel-font);
+    background:var(--border-blue);
+    color:#fff;
+    font-size:12.5px;
+    letter-spacing:0.05em;
+    padding:6px 12px;
+    border-radius:7px 7px 0 0;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .rpgwin .winbody{ padding:16px 16px 18px; }
+
+  /* ---------- plain card (title / result / gameover) ---------- */
+  .card{
+    background:var(--panel);
+    border-radius:18px;
+    box-shadow:0 8px 24px rgba(74,144,217,0.18);
+    padding:26px 24px;
+    position:relative;
+    overflow:hidden;
+    border:2px solid #eef2fb;
+  }
+  .card::before{
+    content:""; position:absolute; top:0; left:0; right:0; height:5px;
+    background:linear-gradient(90deg, var(--accent-gold), var(--c-ok), var(--accent-pink), var(--border-blue));
+    background-size:300% 100%;
+  }
+  h1.title{
+    font-family:var(--display-font); font-size:clamp(26px,5vw,40px);
+    color:var(--ink); text-align:center; line-height:1.35; margin:0 0 8px;
+  }
+  h1.title span{color:var(--accent-pink);}
+  .subtitle{ text-align:center; color:var(--sub); font-size:14px; margin-bottom:24px; }
+  .lead{
+    font-size:14.5px; line-height:1.9; background:var(--panel-cream);
+    border:1px dashed rgba(217,154,0,0.35); border-radius:12px;
+    padding:16px 18px; margin-bottom:20px;
+  }
+  .lead b{color:var(--accent-red);}
+
+  .weapon-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
+  @media (max-width:560px){ .weapon-grid{grid-template-columns:1fr;} }
+  .weapon{ background:var(--panel-blue); border:2px solid var(--border-blue); color:var(--ink); border-radius:14px; padding:14px 16px; }
+  .weapon .wname{ font-family:var(--pixel-font); font-size:14px; color:var(--border-blue-deep); margin-bottom:6px; }
+  .weapon .wdesc{ font-size:12.5px; line-height:1.7; color:var(--sub); }
+  .weapon .wforce{
+    display:inline-block; margin-top:8px; font-family:var(--pixel-font); font-size:10px;
+    background:rgba(244,180,0,0.18); color:var(--accent-gold-deep);
+    border:1px solid rgba(244,180,0,0.5); padding:3px 9px; border-radius:999px;
+  }
+  .warnbox{ background:#fff1ef; border-color:rgba(224,83,61,0.4) !important; }
+
+  .diff-select{ margin-bottom:20px; }
+  .diff-label{ font-family:var(--pixel-font); font-size:12px; color:var(--border-blue-deep); margin-bottom:8px; text-align:center; }
+  .diff-options{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  @media (max-width:600px){ .diff-options{grid-template-columns:1fr;} }
+  .diff-btn{
+    background:var(--panel-blue); border:2px solid var(--border-blue); border-radius:12px;
+    padding:14px 10px; text-align:center; cursor:pointer; font-size:13px; font-weight:700; color:var(--ink);
+    transition:all 0.15s ease;
+  }
+  .diff-btn span{ display:block; font-weight:400; font-size:10.5px; color:var(--sub); margin-top:4px; }
+  .diff-btn.selected{ background:#fff3d6; border-color:var(--accent-gold-deep); box-shadow:0 0 0 2px rgba(244,180,0,0.3); }
+  .diff-btn:hover{ background:#e2f0ff; }
+
+  .focus-select{ margin-bottom:20px; }
+  .focus-lead{ font-size:11.5px; color:var(--sub); text-align:center; margin-bottom:10px; line-height:1.7; }
+  .focus-options{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+  .focus-btn{
+    background:var(--panel-blue); border:2px solid var(--border-blue); border-radius:999px;
+    padding:8px 16px; font-size:12.5px; font-weight:700; color:var(--ink); cursor:pointer;
+    transition:all 0.15s ease;
+  }
+  .focus-btn:hover{ background:#e2f0ff; }
+  .focus-btn.selected{ background:#fff3d6; border-color:var(--accent-gold-deep); box-shadow:0 0 0 2px rgba(244,180,0,0.3); }
+
+  .focus-round-block{ margin:14px 0 4px; }
+  .focus-round-block .focus-options{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+  .focus-note-input{
+    width:100%; padding:8px 10px; border:2px solid var(--border-blue); border-radius:8px;
+    font-family:var(--body-font); font-size:12.5px; color:var(--ink); background:#fff;
+  }
+  .focus-note-input:focus{ outline:none; border-color:var(--accent-gold-deep); background:var(--panel-cream); }
+  .focus-log-list{ display:flex; flex-direction:column; gap:6px; margin:10px 0 14px; }
+  .focus-log-row{ background:var(--panel-blue); border-radius:8px; padding:8px 10px; font-size:12px; }
+  .focus-log-row b{ display:block; color:var(--border-blue-deep); margin-bottom:2px; font-size:11.5px; }
+  .focus-log-note{ display:block; color:var(--sub); line-height:1.5; }
+  .focus-log-note.muted{ font-style:italic; opacity:0.6; }
+
+  .info-box-row{ display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:10px; margin-bottom:14px; }
+  .info-box .winbody{ padding:12px 14px 14px; }
+  .info-badge{ font-family:var(--pixel-font); font-size:13px; color:var(--ink); margin-bottom:6px; }
+  .info-desc{ font-size:11.5px; color:var(--sub); line-height:1.65; }
+  .price-people{ display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+  .price-person{ display:flex; align-items:flex-start; gap:7px; font-size:11px; background:var(--panel-blue); border-radius:8px; padding:6px 9px; }
+  .price-person .pp-em{ font-size:16px; }
+  .price-person b{ display:block; font-size:10.5px; color:var(--ink); margin-bottom:1px; }
+  .pp-mood{ display:block; color:var(--sub); line-height:1.5; }
+  .pp-mood.happy{ color:var(--happy); } .pp-mood.sad{ color:var(--sad); }
+
+  button.ghost.small{ padding:6px 16px; font-size:12px; }
+  .schema-box{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:8px 0 16px; }
+  @media (max-width:560px){ .schema-box{grid-template-columns:1fr;} }
+  .schema-col{
+    background:var(--panel-blue); border:2px solid #cfe0f5; border-radius:10px;
+    padding:10px 12px; font-size:11.5px; line-height:1.7; color:var(--sub); transition:all 0.2s ease;
+  }
+  .schema-col.active{ border-color:var(--accent-gold); background:#fff7e0; box-shadow:0 0 0 2px rgba(244,180,0,0.25); }
+  .schema-head{ font-family:var(--pixel-font); font-size:12px; margin-bottom:6px; }
+  .schema-col:nth-child(1) .schema-head{ color:#a13a26; }
+  .schema-col:nth-child(2) .schema-head{ color:#1f6b45; }
+  .schema-box ul{ margin:0; padding-left:16px; }
+  .schema-box li{ margin-bottom:4px; }
+  .schema-box .fx-line{ color:var(--border-blue-deep); font-weight:700; margin-top:6px; }
+
+  .cta-row{ text-align:center; margin-top:6px;}
+  button.primary{
+    font-family:var(--body-font); font-weight:700; font-size:16px;
+    background:linear-gradient(180deg, var(--accent-gold), var(--accent-gold-deep));
+    color:#3a2900; border:none; border-radius:999px;
+    padding:13px 34px; cursor:pointer;
+    box-shadow:0 6px 16px rgba(244,180,0,0.4);
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  button.primary:hover{ transform:translateY(-2px); box-shadow:0 10px 20px rgba(244,180,0,0.5); }
+  button.primary:disabled{ opacity:0.35; cursor:not-allowed; transform:none; box-shadow:none; }
+  button.ghost{
+    font-family:var(--body-font); font-weight:700; background:#fff;
+    color:var(--border-blue-deep); border:2px solid var(--border-blue); border-radius:999px;
+    padding:10px 26px; cursor:pointer; font-size:14px;
+  }
+
+  /* ---------- HUD ---------- */
+  .hud{
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    background:#fff; border:2px solid var(--border-blue);
+    border-radius:10px; padding:10px 14px; margin-bottom:14px;
+    font-family:var(--pixel-font); color:var(--ink); font-size:11px;
+  }
+  .hud .pips{ display:flex; gap:4px; align-items:center; }
+  .hud .pip{ width:11px; height:11px; border-radius:50%; background:#dfe8f5; border:1px solid #bcd0ea; }
+  .hud .pip.done{ background:var(--accent-gold); border-color:var(--accent-gold-deep); }
+  .hud .pip.now{ background:var(--c-warm); border-color:#fff; box-shadow:0 0 0 2px rgba(244,180,0,0.4); }
+  .hud .pip.star{ background:var(--accent-pink); border-color:#fff; }
+  .hud .meter-label{ display:flex; align-items:center; gap:6px; }
+  .hud .meter-bar{ width:90px; height:9px; background:#eef2fb; border:1px solid #bcd0ea; border-radius:5px; overflow:hidden; }
+  .hud .meter-fill{ height:100%; transition:width 0.5s ease, background-color 0.5s ease; }
+  .hud .spacer{ flex:1; }
+  .hud .temp-mini{ display:flex; align-items:center; gap:6px; }
+  .hud .dot{ width:9px; height:9px; border-radius:50%; }
+  .hud .streak-badge{
+    background:linear-gradient(90deg, var(--accent-pink), var(--accent-gold));
+    color:#fff; padding:3px 9px; border-radius:999px; font-size:10px;
+    animation:badgePulse 1s ease infinite;
+  }
+  @keyframes badgePulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.06); } }
+
+  /* ---------- BOJ -> Bank hub ---------- */
+  .boj-hub-wrap{
+    display:grid; grid-template-columns:1fr auto 1fr; align-items:stretch; gap:10px;
+    margin-bottom:12px;
+  }
+  @media (max-width:640px){ .boj-hub-wrap{ grid-template-columns:1fr; } }
+  .boj-card, .bank-hub-card{ background:var(--panel); }
+  .boj-card .winbody, .bank-hub-card .winbody{ padding:12px 14px 14px; }
+  .gauge-wrap{ display:flex; gap:14px; align-items:center; }
+  .thermo-outer{ width:24px; height:120px; border-radius:12px; background:#eef2fb; border:3px solid var(--border-blue); position:relative; overflow:hidden; flex-shrink:0; }
+  .thermo-fill{ position:absolute; bottom:0; left:0; right:0; border-radius:0 0 9px 9px; transition:height 0.7s cubic-bezier(.4,0,.2,1), background-color 0.7s ease; }
+  .thermo-mark{ position:absolute; left:-5px; right:-5px; height:1px; background:rgba(74,144,217,0.35); }
+  .gauge-info{ flex:1; }
+  .temp-num{ font-family:var(--display-font); font-size:30px; line-height:1; color:var(--ink); }
+  .temp-num small{ font-size:14px; font-weight:400; color:var(--sub); }
+  .zone-chip{ display:inline-block; margin-top:6px; padding:4px 12px; border-radius:999px; font-size:11.5px; font-weight:700; color:#fff; }
+  .zone-text{ margin-top:8px; font-size:11.5px; color:var(--sub); line-height:1.6; }
+
+  .flow-pipe{
+    width:34px; align-self:stretch; border-radius:8px; position:relative; overflow:hidden;
+    background:#eef2fb; border:2px solid #cfe0f5; min-height:70px;
+  }
+  @media (max-width:640px){ .flow-pipe{ width:100%; min-height:26px; } }
+  .flow-pipe::before{
+    content:""; position:absolute; inset:-40%;
+    background-size:16px 16px;
+    animation:flowScroll 1.1s linear infinite;
+  }
+  .flow-pipe.flow-buy::before{
+    background-image:repeating-linear-gradient(135deg, var(--accent-gold) 0 4px, transparent 4px 12px);
+  }
+  .flow-pipe.flow-sell::before{
+    background-image:repeating-linear-gradient(135deg, var(--accent-red) 0 4px, transparent 4px 12px);
+    animation-direction:reverse;
+  }
+  .flow-pipe.flow-none::before{
+    background-image:repeating-linear-gradient(135deg, #c3cfe3 0 4px, transparent 4px 12px);
+    animation-duration:3s; opacity:0.6;
+  }
+  @keyframes flowScroll{ from{ background-position:0 0; } to{ background-position:32px 32px; } }
+  .flow-caption{
+    position:absolute; bottom:2px; left:50%; transform:translateX(-50%);
+    font-size:14px;
+  }
+
+  .bank-title{ display:flex; align-items:center; gap:8px; font-family:var(--pixel-font); font-size:12.5px; color:var(--border-blue-deep); margin-bottom:8px; }
+  .bank-stat-row{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; }
+  .bank-stat-label{ font-size:11.5px; color:var(--sub); }
+  .bank-stat-value{ font-family:var(--display-font); font-size:19px; color:var(--ink); }
+  .bank-bar{ height:8px; background:#eef2fb; border:1px solid #cfe0f5; border-radius:5px; overflow:hidden; margin:4px 0 8px; }
+  .bank-bar-fill{ height:100%; background:linear-gradient(90deg, var(--accent-gold), var(--c-ok)); transition:width 0.6s ease; }
+  .bank-status-line{ font-size:11.5px; color:var(--sub); line-height:1.6; background:var(--panel-blue); border-radius:8px; padding:6px 8px; }
+
+  /* ---------- fx layer (money coins / sparkles) ---------- */
+  .fx-host{ position:relative; }
+  .fx-layer{ position:absolute; inset:0; pointer-events:none; z-index:5; overflow:visible; }
+  .fx-coin{
+    position:absolute; font-size:19px; margin-left:-9px; margin-top:-9px;
+    transform:translate(0,0) scale(1); opacity:1;
+    transition:transform 0.9s cubic-bezier(.4,0,.2,1), opacity 0.9s ease;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,0.25));
+    z-index:6;
+  }
+  .fx-spark{
+    position:absolute; font-size:16px; margin-left:-8px; margin-top:-8px;
+    transform:translate(0,0) scale(1); opacity:1;
+    transition:transform 0.8s cubic-bezier(.2,.7,.3,1), opacity 0.8s ease;
+    z-index:6;
+  }
+  .fx-badge{
+    position:absolute; transform:translate(-50%,10px); opacity:0;
+    font-family:var(--pixel-font); font-size:10.5px; padding:4px 9px; border-radius:6px;
+    white-space:nowrap; animation:badgeFloat 1.8s ease forwards; z-index:7;
+  }
+  .fx-badge.badge-red{ background:#fff1ef; color:#a13a26; border:1px solid var(--accent-red); }
+  .fx-badge.badge-green{ background:#eefbf3; color:#1f6b45; border:1px solid var(--accent-green); }
+  @keyframes badgeFloat{
+    0%{ opacity:0; transform:translate(-50%,10px); }
+    15%{ opacity:1; transform:translate(-50%,0); }
+    78%{ opacity:1; transform:translate(-50%,-2px); }
+    100%{ opacity:0; transform:translate(-50%,-16px); }
+  }
+  @keyframes pulseGreen{
+    0%{ box-shadow:0 0 0 0 rgba(63,167,114,0); }
+    30%{ box-shadow:0 0 0 8px rgba(63,167,114,0.35); }
+    100%{ box-shadow:0 0 0 0 rgba(63,167,114,0); }
+  }
+  @keyframes pulseRed{
+    0%{ box-shadow:0 0 0 0 rgba(224,83,61,0); }
+    30%{ box-shadow:0 0 0 8px rgba(224,83,61,0.35); }
+    100%{ box-shadow:0 0 0 0 rgba(224,83,61,0); }
+  }
+  @keyframes pulseGold{
+    0%{ box-shadow:0 0 0 0 rgba(244,180,0,0); }
+    30%{ box-shadow:0 0 0 10px rgba(244,180,0,0.4); }
+    100%{ box-shadow:0 0 0 0 rgba(244,180,0,0); }
+  }
+  .pulse-green{ animation:pulseGreen 1.2s ease; }
+  .pulse-red{ animation:pulseRed 1.2s ease; }
+  .pulse-gold{ animation:pulseGold 1.4s ease; }
+
+  /* ---------- town grid ---------- */
+  .town-grid{
+    background:
+      repeating-linear-gradient(45deg, var(--plaza-line) 0 2px, transparent 2px 26px),
+      repeating-linear-gradient(-45deg, var(--plaza-line) 0 2px, transparent 2px 26px),
+      var(--plaza);
+    border:3px solid var(--accent-gold-deep);
+    border-radius:10px; padding:14px;
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(120px,1fr)); gap:10px;
+    margin-bottom:14px;
+  }
+  @media (max-width:560px){ .town-grid{ grid-template-columns:repeat(2,1fr); } }
+
+  .npc-tile{
+    background:var(--panel); border:2px solid #ecd9a8; border-radius:10px;
+    padding:8px; display:flex; flex-direction:column; align-items:center; text-align:center;
+    position:relative; min-height:118px; justify-content:flex-end;
+  }
+  .npc-roof{ width:58px; height:22px; margin-bottom:-3px; clip-path:polygon(50% 0%, 3% 100%, 97% 100%); box-shadow:0 2px 2px rgba(0,0,0,0.1); }
+  .npc-body{
+    width:62px; height:36px; border-radius:5px; display:flex; align-items:center; justify-content:center;
+    font-size:24px; position:relative; box-shadow:inset 0 -3px 0 rgba(0,0,0,0.06), 0 2px 3px rgba(0,0,0,0.1);
+    background-image:
+      radial-gradient(circle at 26% 30%, rgba(255,255,255,0.7) 2.4px, transparent 2.9px),
+      radial-gradient(circle at 74% 30%, rgba(255,255,255,0.7) 2.4px, transparent 2.9px);
+  }
+  .npc-body::after{
+    content:""; position:absolute; bottom:0; left:50%; transform:translateX(-50%);
+    width:11px; height:12px; background:rgba(0,0,0,0.14); border-radius:2px 2px 0 0;
+  }
+  .npc-name{
+    font-size:10px; font-weight:700; color:#fff; margin-top:7px; line-height:1.3;
+    background:var(--border-blue-deep); padding:2px 9px; border-radius:999px;
+  }
+  .npc-name span{ font-weight:400; color:#dcebfa; }
+  .npc-bubble{
+    margin-top:6px; font-size:10.5px; line-height:1.5; padding:6px 8px; border-radius:8px;
+    background:#fff; border:2px solid var(--neutral); min-height:44px; display:flex; align-items:center;
+    animation:pop 0.35s ease both;
+  }
+  .npc-bubble.happy{ border-color:var(--happy); background:#f2fbf6; }
+  .npc-bubble.sad{ border-color:var(--sad); background:#fdf2f0; }
+  .npc-bubble.neutral{ border-color:var(--neutral); }
+  @keyframes pop{ from{opacity:0; transform:scale(0.92);} to{opacity:1; transform:scale(1);} }
+  .mood-face{ font-size:12px; margin-right:3px; }
+
+  /* ---------- command window ---------- */
+  .cmd-story{
+    background:var(--panel-blue); border-left:3px solid var(--border-blue);
+    padding:10px 12px; border-radius:0 8px 8px 0; font-size:13px; line-height:1.8; margin-bottom:14px;
+  }
+  .cmd-story b{ color:var(--border-blue-deep); }
+  .dial-block{ margin-bottom:14px; }
+  .dial-title{
+    font-family:var(--pixel-font); font-size:12px; color:var(--border-blue-deep); margin-bottom:6px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .dial-title .tag{ font-size:9px; background:rgba(74,144,217,0.12); border:1px solid rgba(74,144,217,0.4); padding:2px 7px; border-radius:999px; }
+  .cmd-list{ display:flex; flex-direction:column; gap:6px; }
+  .cmd-row{
+    display:flex; align-items:center; gap:10px; background:var(--panel-blue);
+    border:2px solid transparent; border-radius:8px; padding:8px 10px; cursor:pointer;
+    font-size:12.5px; transition:all 0.12s ease;
+  }
+  .cmd-row:hover{ background:#e2f0ff; }
+  .cmd-row .arrow{ font-family:var(--pixel-font); color:var(--accent-gold-deep); width:14px; opacity:0; }
+  .cmd-row.selected{ border-color:var(--accent-gold); background:#fff3d6; }
+  .cmd-row.selected .arrow{ opacity:1; }
+  .cmd-row .emj{ font-size:18px; }
+  .cmd-row .sub{ color:var(--sub); font-size:11px; }
+
+  .result-narration{ font-size:13.5px; line-height:1.9; margin-bottom:14px; }
+  .result-narration b{ color:var(--accent-red); }
+
+  .event-alert{
+    background:#fff1ef; border:2px solid var(--accent-red);
+    border-radius:8px; padding:14px 16px; margin-bottom:12px; font-size:13px; line-height:1.85;
+    animation:flashborder 1.6s ease-in-out infinite;
+  }
+  @keyframes flashborder{ 0%,100%{border-color:var(--accent-red);} 50%{border-color:#ffb199;} }
+  .event-alert b{ color:#a13a26; }
+  .event-choice-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:6px; }
+  @media (max-width:560px){ .event-choice-grid{grid-template-columns:1fr;} }
+  .event-choice{
+    background:var(--panel-blue); border:2px solid var(--border-blue); border-radius:10px;
+    padding:14px; cursor:pointer; text-align:left; transition:all 0.15s ease;
+  }
+  .event-choice:hover{ background:#e2f0ff; transform:translateY(-2px); }
+  .event-choice .ec-label{ font-family:var(--pixel-font); font-size:12px; color:var(--border-blue-deep); margin-bottom:6px; }
+  .event-choice .ec-desc{ font-size:12px; color:var(--sub); line-height:1.75; }
+
+  /* ---------- gameover ---------- */
+  .gameover-card{
+    background:linear-gradient(180deg, #2a0d0d, #150606);
+    border:3px solid #e0533d; border-radius:18px; padding:40px 24px; text-align:center; color:#ffdcd0;
+  }
+  .go-title{ font-family:var(--pixel-font); font-size:34px; color:#ff8a72; letter-spacing:0.1em; margin-bottom:14px; text-shadow:0 0 12px rgba(224,83,61,0.6); }
+  .go-text{ font-size:14px; line-height:1.9; margin-bottom:22px; }
+
+  /* ---------- result ---------- */
+  .rank-badge{ text-align:center; margin:6px 0 18px; }
+  .rank-emoji{ font-size:60px; display:block; margin-bottom:6px;}
+  .rank-name{ font-family:var(--display-font); font-size:24px; color:var(--ink); }
+  .rank-sub{ font-size:12.5px; color:var(--accent-gold-deep); font-weight:700; letter-spacing:0.05em; margin-top:2px;}
+  .cert{ background:var(--panel-cream); border:2px solid var(--accent-gold-deep); border-radius:14px; padding:18px 20px; margin:16px 0; font-size:13.5px; line-height:1.9; }
+  .cert b{ color:var(--accent-red); }
+  .history-row{ display:flex; gap:6px; align-items:flex-end; height:90px; margin:16px 0 8px; }
+  .history-bar{ flex:1; border-radius:6px 6px 0 0; position:relative; transition:height 0.5s ease; }
+  .history-bar span{ position:absolute; top:-18px; left:0; right:0; text-align:center; font-size:10px; color:var(--sub); }
+  .history-labels{ display:flex; gap:6px; }
+  .history-labels div{ flex:1; text-align:center; font-size:10px; color:var(--sub); }
+  .stat-row{ display:flex; gap:10px; margin:14px 0; flex-wrap:wrap; }
+  .stat-chip{ background:var(--border-blue-deep); color:#fff; border-radius:10px; padding:8px 14px; font-size:12.5px; font-family:var(--pixel-font); }
+  .stat-chip b{ color:var(--accent-gold); }
+
+  .final-comments{ margin:18px 0; }
+  .final-comments .fc-title{ font-family:var(--pixel-font); font-size:13px; color:var(--border-blue-deep); margin-bottom:10px; }
+  .fc-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media (max-width:520px){ .fc-grid{ grid-template-columns:1fr; } }
+  .fc-card{
+    background:var(--panel-blue); border:2px solid var(--border-blue); border-radius:12px;
+    padding:10px 12px; font-size:12.5px; line-height:1.7; display:flex; gap:8px; align-items:flex-start;
+  }
+  .fc-card .fc-em{ font-size:22px; }
+  .fc-card b{ display:block; color:var(--border-blue-deep); margin-bottom:2px; font-size:11.5px; }
+
+  .reflect-section{ margin:20px 0; }
+  .reflect-section .fc-title{ font-family:var(--pixel-font); font-size:13px; color:var(--border-blue-deep); margin-bottom:4px; }
+  .reflect-section .reflect-lead{ font-size:12px; color:var(--sub); margin-bottom:12px; line-height:1.7; }
+  .reflect-q{ font-size:12.5px; color:var(--ink); font-weight:700; margin:12px 0 6px; }
+  .reflect-textarea{
+    width:100%; min-height:64px; border:2px solid var(--border-blue); border-radius:10px;
+    padding:9px 11px; font-family:var(--body-font); font-size:13px; color:var(--ink);
+    resize:vertical; background:#fff;
+  }
+  .reflect-textarea:focus{ outline:none; border-color:var(--accent-gold-deep); background:var(--panel-cream); }
+  .reflect-select{
+    width:100%; padding:9px 11px; border:2px solid var(--border-blue); border-radius:10px;
+    font-family:var(--body-font); font-size:13px; color:var(--ink); background:#fff; margin-bottom:4px;
+  }
+  .reflect-select:focus{ outline:none; border-color:var(--accent-gold-deep); }
+  .reflect-note{ font-size:11px; color:var(--sub); margin-top:8px; line-height:1.6; }
+
+  .footer-note{ text-align:center; color:#8792a8; font-size:11px; margin-top:22px; }
+
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------------------------------------------------
+     CONSTANTS / CONTENT
+  --------------------------------------------------------- */
+  var TOTAL_MAIN_ROUNDS = 5;
+
+  var ROUND_INTRO = {
+    1: { badge:"第1ラウンド", title:"目覚めた総裁",
+      text:"あなたは今日から日本銀行の総裁です。街は長い不景気から抜け出せず、お店にはお客さんが来ません。<b>最初の一手</b>で、街に活気を取り戻せるでしょうか？" },
+    2: { badge:"第2ラウンド", title:"活気の兆し",
+      text:"前のラウンドの結果を受けて、街の様子が変わってきました。このままの調子で進めるべきか、それとも舵を切るべきか——。" },
+    3: { badge:"第3ラウンド", title:"銀行の窓口にて",
+      text:"地方銀行の窓口には、お金を借りたい人・預けたい人が並んでいます。日銀の一手は、銀行を通じて街の隅々まで届いていきます。" },
+    4: { badge:"第4ラウンド", title:"声が分かれる街角",
+      text:"商店街では「もっと景気を良くして！」という声と「物価を抑えて！」という声がぶつかっています。全員を100点にする一手はあるでしょうか？" },
+    5: { badge:"第5ラウンド（国内ラスト）", title:"仕上げの一手",
+      text:"国内での調整はこれが最後です。ここでしっかり街を整えておかないと、次に何が起きても持ちこたえられません。" }
+  };
+
+  var ZONES = [
+    { max:17,    key:"extreme-cold", label:"極寒（大デフレ）", color:"var(--c-extreme-cold)", text:"街はすっかり冷え込んで、シャッター街のようになっています…。" },
+    { max:23,    key:"cool",         label:"肌寒い（不景気）", color:"var(--c-cool)",         text:"景気が今ひとつで、みんな財布のひもが固いようです。" },
+    { max:27.001,key:"ok",           label:"適温（絶好調）",   color:"var(--c-ok)",           text:"街は活気にあふれ、みんな笑顔で暮らしています！これぞ理想の温度です。" },
+    { max:33,    key:"warm",         label:"ぽかぽか（過熱注意）", color:"var(--c-warm)",     text:"街は賑わっていますが、値上がりの噂もちらほら聞こえてきます…。" },
+    { max:9999,  key:"hot",          label:"灼熱（大インフレ）", color:"var(--c-hot)",        text:"物価が高騰して、街のあちこちでパニックが起きています！" }
+  ];
+  function zoneOf(t){ for (var i=0;i<ZONES.length;i++){ if (t < ZONES[i].max) return ZONES[i]; } return ZONES[ZONES.length-1]; }
+
+  var RATE_OPTIONS = [
+    { key:"down", emj:"🔻", label:"利下げる", sub:"銀行が貸しやすくなる", val:2 },
+    { key:"flat", emj:"➖", label:"据え置き", sub:"今のままキープ", val:0 },
+    { key:"up",   emj:"🔺", label:"利上げる", sub:"銀行が貸しにくくなる", val:-2 }
+  ];
+  var OP_OPTIONS = [
+    { key:"buy",  emj:"🛒", label:"買いオペ", sub:"銀行の国債を買い取る", val:5 },
+    { key:"none", emj:"⏸️", label:"オペなし", sub:"今回は動かさない", val:0 },
+    { key:"sell", emj:"🏷️", label:"売りオペ", sub:"日銀の国債を銀行に売る", val:-5 }
+  ];
+
+  // Only the 4 townsfolk get mood bubbles in Normal mode.
+  // In Hard mode, the importer (bakery) rejoins to teach the forex link. The bank is a hub, not a "mood" character.
+  var CHAR_META = {
+    father:   { name:"お父さん", sub:"住宅ローン", em:"🧑‍💼", roof:"#7fa8d9", body:"#e8eef7" },
+    grandpa:  { name:"おじいちゃん", sub:"貯金派", em:"👴", roof:"#c9a878", body:"#f4ece0" },
+    startup:  { name:"成長企業", sub:"ベンチャー", em:"🚀", roof:"#7bc99a", body:"#e7f6ee" },
+    factory:  { name:"安定企業", sub:"老舗メーカー", em:"🏭", roof:"#e0a8c4", body:"#fbeaf1" },
+    bakery:   { name:"輸入業者", sub:"パン屋", em:"🥐", roof:"#e08a6b", body:"#fbeadf" },
+    exporter: { name:"輸出企業", sub:"メーカー", em:"🚢", roof:"#5ea8a3", body:"#e3f3f1" }
+  };
+  var CHAR_ORDER_NORMAL = ["father","grandpa","startup","factory"];
+  var CHAR_ORDER_HARD = ["father","grandpa","startup","factory","bakery","exporter"];
+  function charOrder(){ return state.difficulty === "hard" ? CHAR_ORDER_HARD : CHAR_ORDER_NORMAL; }
+
+  var IDLE_GREETING = {
+    father:   "総裁、よろしくお願いします。",
+    grandpa:  "総裁のお手並み拝見じゃな。",
+    startup:  "早く挑戦させてくれよな！",
+    factory:  "落ち着いた街であってほしいね。",
+    bakery:   "今日の仕入れは順調だよ。",
+    exporter: "海外への出荷、順調にいくといいな。"
+  };
+
+  function rateReaction(rateKey,id){
+    var table = {
+      father:  { down:["happy","銀行のローン金利が下がった！毎月の支払いが楽になるよ。"], flat:["neutral","ローンの金利は変わらずかな。"], up:["sad","銀行のローン金利が上がって家計がピンチだよ…。"] },
+      grandpa: { down:["sad","銀行に預けても利息がほとんどつかないなあ…。"], flat:["neutral","預金の利息はいつも通りだね。"], up:["happy","銀行の預金利息が増えて、年金の足しになるよ！"] },
+      startup: { down:["happy","銀行からお金が借りやすい！新しいアイデアに挑戦できるぞ。"], flat:["neutral","今のペースでコツコツ開発を続けるよ。"], up:["sad","銀行の融資金利が上がって、返済が厳しい…新プロジェクトは中止だ…。"] }
+    };
+    return table[id][rateKey];
+  }
+  function factoryReaction(zoneKey){
+    var table = {
+      "extreme-cold": ["sad","モノが全然売れない…従業員のボーナスが心配だよ。"],
+      "cool":         ["neutral","売り上げはまずまず、といったところかな。"],
+      "ok":           ["happy","計画通りの値段で経営できて安心だよ。"],
+      "warm":         ["neutral","材料費がじわじわ上がってきたな…値上げも検討中。"],
+      "hot":          ["sad","材料費が高すぎて何も作れない…もう限界だ。"]
+    };
+    return table[zoneKey];
+  }
+  function bakeryReaction(fx){
+    if (fx <= -2) return ["sad","円安で仕入れが高くなって大変…。"];
+    if (fx >= 2) return ["happy","円高で仕入れが安くなって助かるよ！"];
+    return ["neutral","為替は落ち着いているよ。"];
+  }
+  function exporterReaction(fx){
+    if (fx <= -2) return ["happy","円安で輸出品が売れやすくなって助かるよ！"];
+    if (fx >= 2) return ["sad","円高で輸出品の価格競争力が落ちて苦しいよ…。"];
+    return ["neutral","為替は落ち着いているよ。"];
+  }
+  function buildReactions(rateKey,zoneKey,fx){
+    var out = {};
+    out.father  = { mood: rateReaction(rateKey,"father")[0],  text: rateReaction(rateKey,"father")[1] };
+    out.grandpa = { mood: rateReaction(rateKey,"grandpa")[0], text: rateReaction(rateKey,"grandpa")[1] };
+    out.startup = { mood: rateReaction(rateKey,"startup")[0], text: rateReaction(rateKey,"startup")[1] };
+    var f = factoryReaction(zoneKey);
+    out.factory = { mood:f[0], text:f[1] };
+    if (state.difficulty === "hard"){
+      var bk = bakeryReaction(fx);
+      out.bakery = { mood:bk[0], text:bk[1] };
+      var ex = exporterReaction(fx);
+      out.exporter = { mood:ex[0], text:ex[1] };
+    }
+    return out;
+  }
+
+  /* ---------------------------------------------------------
+     EVENT CARDS (Round 6 finale)
+     - Normal mode: price/economy-themed news (no forex)
+     - Hard mode: forex-themed news, matching the 金利→為替→物価 lesson
+  --------------------------------------------------------- */
+  var EVENT_CARDS_NORMAL = [
+    { id:"boom", badge:"最終ラウンド：ランダム事件", title:"突然の消費ブームショック🎉",
+      intro:"近くに大きな商業施設がオープンし、街に一気に人が押し寄せました！国内の需要が急拡大して、モノやサービスの値段が勝手にどんどん上がり始めています。",
+      shockTemp:31,
+      choices:{
+        A:{ label:"ブレーキを踏む（利上げ・売りオペ）", desc:"値上がりを抑えにいく。生活は守られるが、企業の勢いは落ち着くかも。", resultTemp:25, policyRate:"up", policyOp:"sell",
+          reactions:{ father:["happy","値上がりが落ち着いて、毎日の買い物が助かるよ。"], grandpa:["happy","利息もついて、これはうれしい誤算じゃな。"], startup:["sad","うぅ…急に借りにくくなって、勢いが止まっちゃう…。"], factory:["happy","材料費が落ち着いて、経営計画が立てやすくなったよ。"] } },
+        B:{ label:"低金利をキープする（アクセル寄り）", desc:"このブームに乗せて企業の勢いを後押しする。ただし値上がりは止まらないかも。", resultTemp:35, policyRate:"down", policyOp:"buy",
+          reactions:{ father:["sad","毎日の買い物がどんどん高くなって家計がピンチだよ…。"], grandpa:["sad","物価ばかり上がって、貯金の価値が目減りしていくよ…。"], startup:["happy","このチャンスにどんどん挑戦できるぞ！ありがとう総裁！"], factory:["neutral","注文は増えてるけど、材料費の値上がりも心配だな。"] } }
+      }
+    },
+    { id:"slowdown", badge:"最終ラウンド：ランダム事件", title:"海外の景気急降下ショック🌊",
+      intro:"海外の景気が急に冷え込み、日本の製品が海外でぱったり売れなくなりました。国内の景気とは関係なく、街の温度が勝手に急降下しています。",
+      shockTemp:18,
+      choices:{
+        A:{ label:"アクセルを踏む（大規模買いオペ・利下げ）", desc:"景気の底割れを防ぐために資金を大量供給する。企業は助かるが、少し過熱気味になるかも。", resultTemp:25, policyRate:"down", policyOp:"buy",
+          reactions:{ startup:["happy","日銀が資金を供給してくれて、なんとか倒産せずに耐えられた！"], factory:["happy","国内にお金が回るようになって、大不況の直撃を免れたよ。"], father:["happy","お父さんの会社が潰れなくて本当に良かった…！"], grandpa:["neutral","利息は少ないけど、街が元気なのが一番じゃな。"] } },
+        B:{ label:"様子見・ブレーキのまま", desc:"自然に任せてみる。慎重ではあるが、企業の資金繰りが持たないかもしれない。", resultTemp:12, policyRate:"up", policyOp:"sell",
+          reactions:{ startup:["sad","売れない上に借金もできず、倒産しました…。"], factory:["sad","工場の稼働を止めて、大規模なリストラを行います…。"], father:["sad","お父さんが失業しちゃった…これからどう暮らせばいいの…。"], grandpa:["neutral","利息はついたけど、街の元気がなくて心配じゃな。"] } }
+      }
+    },
+    { id:"shortage", badge:"最終ラウンド：ランダム事件", title:"世界的な資源高・モノ不足ショック🌾",
+      intro:"世界的な異常気象の影響で、原材料が世界中で採れなくなりました。景気は悪いのに、モノの値段だけがどんどん上がる、最悪のピンチです。",
+      shockTemp:30,
+      choices:{
+        A:{ label:"金利を少し上げつつ、地方銀行を特別支援", desc:"物価と景気のバランスを慎重に取りにいく、手間のかかる一手。", resultTemp:26, policyRate:"up", policyOp:"buy",
+          reactions:{ father:["happy","値上がりが落ち着いて、なんとか耐えられるレベルになった！"], startup:["neutral","少し我慢の時期だけど、特別融資のおかげで耐えられるぞ。"], factory:["happy","苦しい危機だったが、一番被害の少ない形で切り抜けられた。"], grandpa:["happy","利息も少し増えて、まずまず安心できたよ。"] } },
+        B:{ label:"極端な利下げ・大増刷でアクセル", desc:"とにかくお金を増やして景気を支えようとする一手。モノ不足には逆効果かもしれない。", resultTemp:38, policyRate:"down", policyOp:"buy",
+          reactions:{ father:["sad","モノがないのにお金だけ増やしても、値段が跳ね上がるだけだよ！"], grandpa:["sad","お金の価値がどんどん下がっていく…心配じゃよ。"], startup:["neutral","お金は借りやすいけど、材料が手に入らなくて作れないよ。"], factory:["sad","原材料の奪い合いで、工場が全然回らない…。"] } }
+      }
+    }
+  ];
+
+  var EVENT_CARDS_HARD = [
+    { id:"yen_weak", badge:"最終ラウンド：為替ニュース", title:"海外発・急激な円安ショック⚡", fxShock:-4,
+      intro:"アメリカが急に金利を引き上げました。世界中のお金がドルに集まり、日本円が売られて一気に円安が進んでいます。海外からの原材料が値上がりし始め、街の温度が勝手に上昇しています。",
+      shockTemp:31,
+      choices:{
+        A:{ label:"ブレーキを踏む（利上げ・売りオペ）", desc:"円安に対抗して金利を上げ、物価と為替を落ち着かせにいく。輸入業者や家計は助かるが、企業の勢いは鈍るかも。", resultTemp:25, policyRate:"up", policyOp:"sell", fxShift:3,
+          reactions:{ father:["happy","値上がりが落ち着いて、家計が助かるよ。"], grandpa:["happy","利息もついて、これは嬉しい誤算だね。"], startup:["sad","うぅ…急に借りにくくなって、勢いが止まっちゃう…。"], factory:["happy","輸入コストが落ち着いて、経営計画が立てやすくなったよ。"], bakery:["happy","円高方向に戻って、仕入れがだいぶ楽になったよ！"], exporter:["sad","円高方向に戻って、輸出の勢いが少し落ち着いてしまうな…。"] } },
+        B:{ label:"低金利をキープする（アクセル寄り）", desc:"企業の勢いを止めない。ただし円安には対応しないので、輸入コストの高騰は止まらないかも。", resultTemp:35, policyRate:"down", policyOp:"buy", fxShift:-2,
+          reactions:{ father:["sad","毎日の買い物がどんどん高くなって家計がピンチだよ…。"], grandpa:["sad","物価ばかり上がって、貯金の価値が目減りしていくよ…。"], startup:["happy","このチャンスにどんどん挑戦できるぞ！ありがとう総裁！"], factory:["neutral","注文は増えてるけど、輸入コストの値上がりも心配だな。"], bakery:["sad","円安がさらに進んで、仕入れがどんどん高くなる…もう限界だよ…。"], exporter:["happy","円安がもっと進んで、海外の注文がどんどん増えているよ！"] } }
+      }
+    },
+    { id:"yen_strong", badge:"最終ラウンド：為替ニュース", title:"海外発・急激な円高ショック🌐", fxShock:4,
+      intro:"海外の中央銀行が急に金利を引き下げました。日本円が買われて、一気に円高が進んでいます。輸出企業には逆風ですが、輸入業者にとっては仕入れが安くなるチャンスです。街の温度が勝手に下降しています。",
+      shockTemp:18,
+      choices:{
+        A:{ label:"アクセルを踏む（利下げ・買いオペ）", desc:"円高で苦しむ企業を支えるため、資金を供給して景気を下支えする。", resultTemp:25, policyRate:"down", policyOp:"buy", fxShift:-3,
+          reactions:{ startup:["happy","日銀が資金を供給してくれて、輸出の落ち込みをなんとか耐えられた！"], factory:["happy","国内需要が下支えされて、大きな痛手を免れたよ。"], father:["happy","お父さんの会社が持ちこたえられて安心したよ。"], grandpa:["neutral","利息は少ないけど、街が元気なのが一番だね。"], bakery:["neutral","仕入れは安いけど、街のお客さんも少し減った感じだね。"], exporter:["happy","円高が少し和らいで、輸出がなんとか持ち直しそうだ。"] } },
+        B:{ label:"様子見・ブレーキ気味", desc:"自然に任せる。慎重ではあるが、企業の打撃が長引くかもしれない。", resultTemp:12, policyRate:"up", policyOp:"sell", fxShift:2,
+          reactions:{ startup:["sad","円高で海外の売り上げがガクッと減って、資金繰りが厳しい…。"], factory:["sad","工場の稼働を落とさざるを得ない状況だよ…。"], father:["sad","お父さんの会社の業績が心配だよ…。"], grandpa:["neutral","利息はついたけど、街の元気がなくて心配だね。"], bakery:["happy","仕入れがどんどん安くなって、正直助かってはいるけど…街全体が心配だね。"], exporter:["sad","円高がさらに進んで、海外での価格競争力がどんどん落ちている…もう厳しいよ。"] } }
+      }
+    }
+  ];
+
+  var RANKS = {
+    S:      { emoji:"🏆", name:"伝説の名総裁", sub:"パーフェクト・バランサー",
+      cert:"お見事！あなたはアクセルとブレーキを的確に使い分け、街のみんなの声に耳を傾けながら温度を守り抜きました。一般人も企業も銀行も、あなたのおかげで安心して暮らせています！" },
+    accel:  { emoji:"🚀", name:"イケイケ成長重視総裁", sub:"アクセル多め",
+      cert:"企業の挑戦をたくさん応援しましたね！おかげで街には新しい挑戦があふれています。ただ、その分すこし物価が高めになりがちでした。次はみんなの財布にも、もう少し気を配ってみよう！" },
+    brake:  { emoji:"🛡️", name:"鉄壁の生活防衛総裁", sub:"ブレーキ多め",
+      cert:"みんなの生活を守る判断は完璧でした！物価はしっかり抑えられましたが、その分すこし街が冷え込みぎみでした。街が元気を取り戻すには、時には思い切ってアクセルを踏む勇気も必要だよ！" },
+    jet:    { emoji:"🎢", name:"スリル満点！ジェットコースター総裁", sub:"急変多め",
+      cert:"大胆な決断力はすごい！でも急な利上げ・利下げのたびに、街は反動ショックでパニックになっていました。日銀の舵取りは大きな船と同じ。少し先を予想して『ゆっくり・ていねいに』動かすのがコツだよ！" },
+    balance:{ emoji:"⚖️", name:"堅実なバランス型総裁", sub:"合格ライン",
+      cert:"大きな失敗もなく、街をしっかり支え切りました！完璧ではなかったものの、みんなの声にきちんと耳を傾けた誠実な采配でした。次はさらに反動ショックを減らして、伝説の総裁を目指してみよう！" }
+  };
+
+  /* ---------------------------------------------------------
+     FINAL CHARACTER COMMENTS (result screen)
+  --------------------------------------------------------- */
+  var FINAL_COMMENT = {
+    father: {
+      pos:"総裁のおかげで、ローンの支払いに追われず暮らせたよ。ありがとう！",
+      neg:"正直、ローン金利にずっと苦しめられた気がするよ…。",
+      neu:"良い時も大変な時もあったけど、なんとかやってこれたよ。"
+    },
+    grandpa: {
+      pos:"利息もしっかりついて、老後も安心じゃったよ。",
+      neg:"ずっと低金利で、貯金の利息はほとんどつかなかったのう…。",
+      neu:"まずまずといったところかのう。"
+    },
+    startup: {
+      pos:"挑戦するチャンスをたくさんもらえた！最高の総裁だったよ！",
+      neg:"資金繰りが厳しくて、挑戦したくても出来なかったよ…。",
+      neu:"やれることはやれたかな、というところ。"
+    },
+    factory: {
+      pos:"落ち着いた経営ができて、本当に助かったよ。",
+      neg:"材料費や急な変化に振り回されて大変だったよ…。",
+      neu:"まずまず経営できたと思うよ。"
+    },
+    bakery: {
+      pos:"円高のおかげで仕入れが安定して、本当に助かったよ！",
+      neg:"円安続きで仕入れがずっと高くて、経営が苦しかったよ…。",
+      neu:"為替も落ち着いていて、まずまずの一年だったよ。"
+    },
+    exporter: {
+      pos:"円安の追い風もあって、海外にたくさん売れて絶好調だったよ！",
+      neg:"円高が続いて、海外での価格競争力を保つのが本当に大変だったよ…。",
+      neu:"為替に振り回されながらも、なんとかやってこれたよ。"
+    }
+  };
+
+  /* ---------------------------------------------------------
+     STATE
+  --------------------------------------------------------- */
+  var state;
+  function freshState(prevDifficulty){
+    var difficulty = prevDifficulty || "easy";
+    var order = difficulty === "hard" ? CHAR_ORDER_HARD : CHAR_ORDER_NORMAL;
+    var bubbles = {};
+    var tally = {};
+    order.forEach(function(id){
+      bubbles[id] = { mood:"neutral", text: IDLE_GREETING[id] };
+      tally[id] = { happy:0, sad:0, neutral:0 };
+    });
+    return {
+      screen: "title",          // title | town | gameover | result
+      phase: "mainSelect",      // mainSelect | mainResult | eventIntro | eventChoice | eventResult
+      difficulty: difficulty,   // normal | hard
+      showSchema: false,
+      round: 1,
+      temp: 19,
+      support: 60,
+      history: [19],
+      reboundQueued: 0,
+      reboundCount: 0,
+      netBias: 0,
+      coreHits: 0,
+      coreStreak: 0,
+      keepStreak: 0,
+      bankRate: 1.5,
+      bankReserve: 300,
+      fx: 0,
+      lastOp: "none",
+      rateChoice: null,
+      opChoice: null,
+      lastReboundApplied: 0,
+      lastStagnation: false,
+      lastNarration: "",
+      npcBubbles: bubbles,
+      charTally: tally,
+      eventCard: null,
+      eventChoiceKey: null,
+      gameoverReason: null,
+      fxRequest: null,
+      justHitCore: false,
+      focusLog: [],
+      roundFocusChoice: null,
+      roundFocusNote: ""
+    };
+  }
+  function initCharsForDifficulty(){
+    var order = charOrder();
+    var bubbles = {}; var tally = {};
+    order.forEach(function(id){
+      bubbles[id] = { mood:"neutral", text: IDLE_GREETING[id] };
+      tally[id] = { happy:0, sad:0, neutral:0 };
+    });
+    state.npcBubbles = bubbles;
+    state.charTally = tally;
+  }
+  state = freshState();
+
+  /* ---------------------------------------------------------
+     HELPERS
+  --------------------------------------------------------- */
+  function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+  function moodFace(m){ return m==="happy" ? "😊" : (m==="sad" ? "😟" : "😐"); }
+
+  function thermoHTML(temp){
+    var pct = clamp(temp,0,45)/45*100;
+    var z = zoneOf(temp);
+    var marks = [17,23,27,33].map(function(m){
+      var top = 100 - clamp(m,0,45)/45*100;
+      return '<div class="thermo-mark" style="top:'+top+'%"></div>';
+    }).join("");
+    return '<div class="thermo-outer">'+marks+'<div class="thermo-fill" style="height:'+pct+'%; background:'+z.color+';"></div></div>';
+  }
+
+  function supportColor(v){
+    if (v <= 25) return "var(--c-hot)";
+    if (v <= 50) return "var(--c-warm)";
+    return "var(--c-ok)";
+  }
+
+  function hudHTML(){
+    var pips = "";
+    for (var i=1;i<=TOTAL_MAIN_ROUNDS;i++){
+      var cls = "pip";
+      if (i < state.round) cls += " done";
+      else if (i === state.round && state.screen==="town" && state.round<=TOTAL_MAIN_ROUNDS) cls += " now";
+      pips += '<span class="'+cls+'"></span>';
+    }
+    var starCls = "pip star" + (state.round > TOTAL_MAIN_ROUNDS ? " now" : "");
+    var z = zoneOf(state.temp);
+    var streak = state.coreStreak >= 2 ? '<span class="streak-badge">🔥 適温 x'+state.coreStreak+'</span>' : "";
+    return ''+
+    '<div class="hud">'+
+      '<div class="pips">'+pips+'<span class="'+starCls+'">★</span></div>'+
+      '<div class="meter-label">支持率<div class="meter-bar"><div class="meter-fill" style="width:'+state.support+'%; background:'+supportColor(state.support)+';"></div></div>'+state.support+'</div>'+
+      streak+
+      '<div class="spacer"></div>'+
+      '<div class="temp-mini"><span class="dot" style="background:'+z.color+'"></span>'+Math.round(state.temp)+'℃</div>'+
+    '</div>';
+  }
+
+  /* ---------------------------------------------------------
+     BOJ -> BANK -> TOWN LAYOUT
+  --------------------------------------------------------- */
+  function bojBankHubHTML(){
+    var z = zoneOf(state.temp);
+    var flowClass = state.lastOp === "buy" ? "flow-buy" : (state.lastOp === "sell" ? "flow-sell" : "flow-none");
+    var flowIcon = state.lastOp === "buy" ? "🟡" : (state.lastOp === "sell" ? "🔴" : "⚪");
+    var statusLine = state.lastOp === "buy"
+      ? "🛒 買いオペ実施中：資金がどんどん増えています！"
+      : (state.lastOp === "sell"
+        ? "🏷️ 売りオペ実施中：資金が回収されています…"
+        : "⏸️ 特に操作なし：資金は自然にすこしずつ減っています");
+    var reservePct = clamp(state.bankReserve, 0, 600) / 600 * 100;
+    return ''+
+    '<div class="boj-hub-wrap fx-host">'+
+      '<div class="fx-layer"></div>'+
+      '<div class="rpgwin boj-card" data-plaza="1">'+
+        '<div class="winhead"><span>🏛️ 日本銀行</span><span>政策</span></div>'+
+        '<div class="winbody">'+
+          '<div class="gauge-wrap">'+
+            thermoHTML(state.temp)+
+            '<div class="gauge-info">'+
+              '<div class="temp-num">'+Math.round(state.temp)+'<small>℃</small></div>'+
+              '<span class="zone-chip" style="background:'+z.color+'">'+z.label+'</span>'+
+              '<div class="zone-text">'+z.text+'</div>'+
+            '</div>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="flow-pipe '+flowClass+'"><span class="flow-caption">'+flowIcon+'</span></div>'+
+      '<div class="rpgwin bank-hub-card" data-bankhub="1">'+
+        '<div class="winhead"><span>🏦 地方銀行</span><span>窓口</span></div>'+
+        '<div class="winbody">'+
+          '<div class="bank-stat-row"><span class="bank-stat-label">銀行の貸出金利</span><span class="bank-stat-value">'+state.bankRate.toFixed(1)+'%</span></div>'+
+          '<div class="bank-stat-row"><span class="bank-stat-label">銀行の手持ち資金</span><span class="bank-stat-value">'+Math.round(state.bankReserve)+'億円</span></div>'+
+          '<div class="bank-bar"><div class="bank-bar-fill" style="width:'+reservePct+'%"></div></div>'+
+          '<div class="bank-status-line">'+statusLine+'</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }
+
+  function computeInflation(){
+    return Math.round((state.temp - 25) * 0.4 * 10) / 10;
+  }
+
+  function storeCustomerReaction(infl){
+    if (infl > 2) return {
+      store:    ["happy","値段が上がって、売り上げが伸びているよ！"],
+      customer: ["sad","買い物のたびに値段が上がっていて大変…。"]
+    };
+    if (infl < -2) return {
+      store:    ["sad","値段が下がって、売り上げが伸び悩んでいるよ…。"],
+      customer: ["happy","安く買えて助かるよ！"]
+    };
+    return {
+      store:    ["neutral","まずまずの売れ行きだよ。"],
+      customer: ["neutral","普段通りの買い物ができているよ。"]
+    };
+  }
+
+  function priceBoxHTML(){
+    var infl = computeInflation();
+    var label = infl > 2 ? "🔥 インフレぎみ" : (infl < -2 ? "🧊 デフレぎみ" : "😊 落ち着いている");
+    var desc = infl > 2
+      ? "物価がどんどん上がっています。買い物がしづらくなるかも。"
+      : (infl < -2 ? "物価が下がり気味です。お店の売り上げが心配…。" : "物価は落ち着いた動きです。");
+    var pc = storeCustomerReaction(infl);
+    return ''+
+    '<div class="rpgwin info-box">'+
+      '<div class="winhead"><span>📦 物価（インフレ率）</span><span>'+(infl>0?'+':'')+infl.toFixed(1)+'%</span></div>'+
+      '<div class="winbody">'+
+        '<div class="info-badge">'+label+'</div>'+
+        '<div class="info-desc">'+desc+'</div>'+
+        '<div class="price-people">'+
+          '<div class="price-person"><span class="pp-em">🏪</span><div><b>お店の人</b><span class="pp-mood '+pc.store[0]+'">'+pc.store[1]+'</span></div></div>'+
+          '<div class="price-person"><span class="pp-em">🙋</span><div><b>お客さん（私たち）</b><span class="pp-mood '+pc.customer[0]+'">'+pc.customer[1]+'</span></div></div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }
+
+  function fxBoxHTML(){
+    var fxLabel = state.fx <= -2 ? "🔴 円安ぎみ" : (state.fx >= 2 ? "🔵 円高ぎみ" : "⚪ 安定");
+    var desc = state.fx <= -2
+      ? "円安が進むと、海外からの輸入品が値上がりしやすくなります。"
+      : (state.fx >= 2 ? "円高が進むと、海外からの輸入品が値下がりしやすくなります。" : "為替は落ち着いています。");
+    return ''+
+    '<div class="rpgwin info-box">'+
+      '<div class="winhead"><span>🌐 為替（円相場）</span><span>'+(state.fx>0?'+':'')+state.fx+'</span></div>'+
+      '<div class="winbody">'+
+        '<div class="info-badge">'+fxLabel+'</div>'+
+        '<div class="info-desc">'+desc+'</div>'+
+      '</div>'+
+    '</div>';
+  }
+
+  function infoBoxesHTML(){
+    var boxes = "";
+    if (state.difficulty === "normal" || state.difficulty === "hard") boxes += priceBoxHTML();
+    if (state.difficulty === "hard") boxes += fxBoxHTML();
+    if (!boxes) return "";
+    return '<div class="info-box-row">'+boxes+'</div>';
+  }
+
+  function schemaBoxHTML(){
+    var hard = state.difficulty === "hard";
+    var upActive = state.rateChoice === "up";
+    var downActive = state.rateChoice === "down";
+    return ''+
+    '<div class="schema-box">'+
+      '<div class="schema-col'+(upActive?' active':'')+'">'+
+        '<div class="schema-head">🔺 利上げすると…</div>'+
+        '<ul>'+
+          '<li>銀行の預金利息が増える → 貯金が増える</li>'+
+          '<li>銀行からお金を借りにくくなる → 消費・投資が減る</li>'+
+          '<li>街に出回るお金が減る → 物価が上がりにくくなる</li>'+
+          (hard? '<li class="fx-line">🌐 海外のお金が集まりやすい → <b>円高</b>になりやすい → 輸入品は安くなる一方、輸出企業は売りにくくなる → 全体では物価が落ち着きやすい</li>':'')+
+        '</ul>'+
+      '</div>'+
+      '<div class="schema-col'+(downActive?' active':'')+'">'+
+        '<div class="schema-head">🔻 利下げすると…</div>'+
+        '<ul>'+
+          '<li>銀行の預金利息が減る → 消費に回しやすくなる</li>'+
+          '<li>銀行からお金を借りやすくなる → 消費・投資が増える</li>'+
+          '<li>街に出回るお金が増える → 物価が上がりやすくなる</li>'+
+          (hard? '<li class="fx-line">🌐 海外にお金が流れやすい → <b>円安</b>になりやすい → 輸入品は高くなる一方、輸出企業は売りやすくなる → 全体では物価が上がりやすい</li>':'')+
+        '</ul>'+
+      '</div>'+
+    '</div>';
+  }
+
+  function npcTileHTML(id){
+    var meta = CHAR_META[id];
+    var b = state.npcBubbles[id];
+    return ''+
+    '<div class="npc-tile" data-npc="'+id+'">'+
+      '<div class="npc-bubble '+b.mood+'"><span class="mood-face">'+moodFace(b.mood)+'</span>'+b.text+'</div>'+
+      '<div class="npc-roof" style="background-color:'+meta.roof+'"></div>'+
+      '<div class="npc-body" style="background-color:'+meta.body+'">'+meta.em+'</div>'+
+      '<div class="npc-name">'+meta.name+(meta.sub? ' <span>'+meta.sub+'</span>':'')+'</div>'+
+    '</div>';
+  }
+
+  function townGridHTML(){
+    return '<div class="town-grid">'+ charOrder().map(npcTileHTML).join("") + '</div>';
+  }
+
+  /* ---------------------------------------------------------
+     BOTTOM COMMAND PANEL (varies by phase)
+  --------------------------------------------------------- */
+  function panelMainSelectHTML(){
+    var intro = ROUND_INTRO[state.round];
+    var alerts = "";
+    if (state.lastStagnation){
+      alerts += '<div class="event-alert">😴 <b>油断ショック！</b> 何回も「様子見」が続いたため、街の気が緩んで思わぬ変化が起きてしまいました…！</div>';
+    }
+    return ''+
+    '<div class="rpgwin cmdwin">'+
+      '<div class="winhead"><span>'+intro.badge+'　'+intro.title+'</span><span>'+state.round+' / '+TOTAL_MAIN_ROUNDS+'</span></div>'+
+      '<div class="winbody">'+
+        alerts+
+        '<div class="cmd-story">'+intro.text+'</div>'+
+        '<div class="cta-row" style="margin-bottom:'+(state.showSchema?'2':'12')+'px;"><button class="ghost small" id="schemaToggleBtn">🔍 金利のしくみを見る</button></div>'+
+        (state.showSchema ? schemaBoxHTML() : '')+
+        '<div class="dial-block">'+
+          '<div class="dial-title">🔻 政策金利<span class="tag">銀行の金利を動かす</span></div>'+
+          '<div class="cmd-list" data-dial="rate">'+
+            RATE_OPTIONS.map(function(o){
+              return '<div class="cmd-row'+(state.rateChoice===o.key?' selected':'')+'" data-key="'+o.key+'">'+
+                '<span class="arrow">▶</span><span class="emj">'+o.emj+'</span>'+
+                '<span><b>'+o.label+'</b><br><span class="sub">'+o.sub+'</span></span></div>';
+            }).join("")+
+          '</div>'+
+        '</div>'+
+        '<div class="dial-block">'+
+          '<div class="dial-title">📦 国債オペ<span class="tag">銀行の資金を動かす</span></div>'+
+          '<div class="cmd-list" data-dial="op">'+
+            OP_OPTIONS.map(function(o){
+              return '<div class="cmd-row'+(state.opChoice===o.key?' selected':'')+'" data-key="'+o.key+'">'+
+                '<span class="arrow">▶</span><span class="emj">'+o.emj+'</span>'+
+                '<span><b>'+o.label+'</b><br><span class="sub">'+o.sub+'</span></span></div>';
+            }).join("")+
+          '</div>'+
+        '</div>'+
+        '<div class="cta-row"><button class="primary" id="decideBtn" '+(state.rateChoice&&state.opChoice? '' : 'disabled')+'>この作戦で決定する</button></div>'+
+      '</div>'+
+    '</div>';
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+
+  function focusPickerHTML(){
+    var noteVal = escapeHtml(state.roundFocusNote || "");
+    return ''+
+    '<div class="focus-round-block">'+
+      '<div class="reflect-q" style="margin-top:2px;">🤝 今回、特に気になったのは誰？</div>'+
+      '<div class="focus-options">'+
+        charOrder().map(function(id){
+          var meta = CHAR_META[id];
+          return '<div class="focus-btn'+(state.roundFocusChoice===id?' selected':'')+'" data-focus="'+id+'">'+meta.em+' '+meta.name+'</div>';
+        }).join("")+
+      '</div>'+
+      '<input type="text" class="focus-note-input" id="focusNoteInput" maxlength="80" placeholder="（任意）なぜ気になった？ひとことメモ" value="'+noteVal+'">'+
+    '</div>';
+  }
+
+  function panelMainResultHTML(){
+    return ''+
+    '<div class="rpgwin cmdwin">'+
+      '<div class="winhead"><span>結果発表</span><span>▼</span></div>'+
+      '<div class="winbody">'+
+        '<div class="result-narration">'+state.lastNarration+'</div>'+
+        focusPickerHTML()+
+        '<div class="cta-row"><button class="primary" id="nextBtn" '+(state.roundFocusChoice? '' : 'disabled')+'>'+(state.round < TOTAL_MAIN_ROUNDS ? "次のラウンドへ" : "最終ラウンドへ進む")+'</button></div>'+
+      '</div>'+
+    '</div>';
+  }
+
+  function panelEventIntroHTML(){
+    var card = state.eventCard;
+    return ''+
+    '<div class="rpgwin cmdwin">'+
+      '<div class="winhead"><span>⚠️ '+card.badge+'</span><span>!!</span></div>'+
+      '<div class="winbody">'+
+        '<div class="event-alert"><b>'+card.title+'</b><br><br>'+card.intro+'</div>'+
+        '<div class="result-narration">国内の努力とは関係なく、外からの力で街の温度が勝手に <b>'+card.shockTemp+'℃</b> まで動いてしまいました。総裁として、最後の決断を下してください。</div>'+
+        '<div class="cta-row"><button class="primary" id="eventContinueBtn">つづきを見る ▼</button></div>'+
+      '</div>'+
+    '</div>';
+  }
+
+  function panelEventChoiceHTML(){
+    var card = state.eventCard;
+    return ''+
+    '<div class="rpgwin cmdwin">'+
+      '<div class="winhead"><span>🎯 最終決断</span><span>A / B</span></div>'+
+      '<div class="winbody">'+
+        '<div class="event-choice-grid">'+
+          ['A','B'].map(function(k){
+            var c = card.choices[k];
+            return '<div class="event-choice" data-choice="'+k+'">'+
+              '<div class="ec-label">決断'+k+'：'+c.label+'</div>'+
+              '<div class="ec-desc">'+c.desc+'</div>'+
+            '</div>';
+          }).join("")+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }
+
+  function panelEventResultHTML(){
+    var card = state.eventCard;
+    var choice = card.choices[state.eventChoiceKey];
+    return ''+
+    '<div class="rpgwin cmdwin">'+
+      '<div class="winhead"><span>決断の結果</span><span>▼</span></div>'+
+      '<div class="winbody">'+
+        '<div class="result-narration">決断「<b>'+choice.label+'</b>」を実行しました。街の温度は <b>'+choice.resultTemp+'℃</b> に。みんなの反応を見てみましょう。</div>'+
+        focusPickerHTML()+
+        '<div class="cta-row"><button class="primary" id="resultBtn" '+(state.roundFocusChoice? '' : 'disabled')+'>総裁としての通信簿を見る</button></div>'+
+      '</div>'+
+    '</div>';
+  }
+
+  /* ---------------------------------------------------------
+     TOP-LEVEL SCREENS
+  --------------------------------------------------------- */
+  function renderTitle(){
+    return ''+
+    '<div class="card">'+
+      '<h1 class="title">めざせ名総裁！<br><span>日銀マネー・ループ</span></h1>'+
+      '<div class="subtitle">〜 街の温度を守り抜け 〜</div>'+
+      '<div class="lead">あなたはこれから<b>日本銀行の総裁</b>になって、街の「温度（景気・物価メーター）」を<b>23〜27℃の適温</b>に保ち続けるミッションに挑戦します。日銀の一手は、まず<b>地方銀行</b>を通じて、それから街のみんなに届いていきます。</div>'+
+      '<div class="weapon-grid">'+
+        '<div class="weapon"><div class="wname">① 政策金利</div><div class="wdesc">日銀が金利を動かすと、銀行の貸出金利もつられて動く。銀行からお金が借りやすくなったり、借りにくくなったりする。</div><span class="wforce">微調整：±2℃</span></div>'+
+        '<div class="weapon"><div class="wname">② 国債オペ</div><div class="wdesc">銀行が持つ国債を買い取ったり売ったりして、銀行の手持ち資金をドカンと増減させる。銀行の資金が街に流れ込む量が変わる。</div><span class="wforce">主力技：±5℃</span></div>'+
+      '</div>'+
+      '<div class="lead warnbox">⚠️ <b>急な操作には注意！</b> 一度に強くアクセル・ブレーキを踏みすぎると翌ラウンドに「反動ショック」が発生。「様子見」ばかり続けても油断ショックが起きます。街のみんなの<b>支持率</b>が0になったり、温度が5℃以下・45℃以上になると、<b>総裁は解任されてしまいます</b>。</div>'+
+      '<div class="diff-select">'+
+        '<div class="diff-label">むずかしさを選ぼう</div>'+
+        '<div class="diff-options">'+
+          '<div class="diff-btn'+(state.difficulty==="easy"?' selected':'')+'" data-diff="easy">やさしい<br><span>金利と国債オペのきほん</span></div>'+
+          '<div class="diff-btn'+(state.difficulty==="normal"?' selected':'')+'" data-diff="normal">ふつう<br><span>「物価」の動きも見える化</span></div>'+
+          '<div class="diff-btn'+(state.difficulty==="hard"?' selected':'')+'" data-diff="hard">むずかしい<br><span>為替（円高・円安）も登場！</span></div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="lead" style="font-size:12.5px;">🤝 各ラウンドの結果が出るたびに「今回、特に気になった人」を選んで、ひとことメモを残せます。ゲーム終了後、その記録をまとめて振り返れます。</div>'+
+      '<div class="cta-row"><button class="primary" id="startBtn">総裁に就任する</button></div>'+
+    '</div>';
+  }
+
+  function renderTown(){
+    var panel;
+    if (state.phase === "mainSelect") panel = panelMainSelectHTML();
+    else if (state.phase === "mainResult") panel = panelMainResultHTML();
+    else if (state.phase === "eventIntro") panel = panelEventIntroHTML();
+    else if (state.phase === "eventChoice") panel = panelEventChoiceHTML();
+    else panel = panelEventResultHTML();
+    return hudHTML() + bojBankHubHTML() + townGridHTML() + infoBoxesHTML() + panel;
+  }
+
+  function renderGameover(){
+    var msg = state.gameoverReason === "support"
+      ? "街のみんなの支持率が0になり、総裁は解任されてしまいました…。誰か一人の声だけを聞いていては、街全体を守ることはできません。"
+      : "温度が制御できないところまで動いてしまい、街は大混乱。総裁は解任されてしまいました…。急な操作は街にとって大きな負担になります。";
+    return ''+
+    '<div class="gameover-card">'+
+      '<div class="go-title">GAME OVER</div>'+
+      '<div class="go-text">'+msg+'</div>'+
+      '<div class="cta-row"><button class="ghost" id="retryBtn">もう一度、総裁に挑戦する</button></div>'+
+    '</div>';
+  }
+
+  function computeRank(){
+    if (state.reboundCount >= 2 || state.support < 35) return RANKS.jet;
+    if (state.reboundCount === 0 && state.coreHits >= 4 && state.support >= 55) return RANKS.S;
+    if (state.netBias > 6) return RANKS.accel;
+    if (state.netBias < -6) return RANKS.brake;
+    return RANKS.balance;
+  }
+
+  function bankFinalComment(){
+    if (state.bankReserve >= 400) return "資金にゆとりがあって、しっかり街にお金を貸し出せました！";
+    if (state.bankReserve <= 100) return "資金繰りがギリギリで、正直ヒヤヒヤしました…。";
+    return "まずまず安定して運営できました。";
+  }
+
+  function finalCommentsHTML(){
+    var cards = charOrder().map(function(id){
+      var t = state.charTally[id];
+      var meta = CHAR_META[id];
+      var text;
+      if (t.happy - t.sad >= 2) text = FINAL_COMMENT[id].pos;
+      else if (t.sad - t.happy >= 2) text = FINAL_COMMENT[id].neg;
+      else text = FINAL_COMMENT[id].neu;
+      return '<div class="fc-card"><span class="fc-em">'+meta.em+'</span><div><b>'+meta.name+'</b>'+text+'</div></div>';
+    }).join("");
+    cards += '<div class="fc-card"><span class="fc-em">🏦</span><div><b>地方銀行</b>'+bankFinalComment()+'</div></div>';
+    return '<div class="final-comments"><div class="fc-title">📣 みんなからのコメント</div><div class="fc-grid">'+cards+'</div></div>';
+  }
+
+  function renderResult(){
+    var rank = computeRank();
+    var hist = state.history;
+    var maxT = 45;
+    var barsHTML = hist.map(function(t){
+      var z = zoneOf(t);
+      var h = clamp(t,0,maxT)/maxT*90 + 6;
+      return '<div class="history-bar" style="height:'+h+'px; background:'+z.color+'"><span>'+Math.round(t)+'℃</span></div>';
+    }).join("");
+    var labels = hist.map(function(t,i){
+      return '<div>'+(i===0? "スタート" : (i===hist.length-1 ? "最終" : "R"+i))+'</div>';
+    }).join("");
+    return ''+
+    '<div class="card">'+
+      '<h1 class="title" style="font-size:22px;">総裁としての通信簿</h1>'+
+      '<div class="rank-badge"><span class="rank-emoji">'+rank.emoji+'</span><div class="rank-name">'+rank.name+'</div><div class="rank-sub">'+rank.sub+'</div></div>'+
+      '<div class="cert">'+rank.cert+'</div>'+
+      '<div class="stat-row">'+
+        '<div class="stat-chip">適温クリア：<b>'+state.coreHits+' / '+(TOTAL_MAIN_ROUNDS+1)+'</b></div>'+
+        '<div class="stat-chip">反動ショック：<b>'+state.reboundCount+'</b> 回</div>'+
+        '<div class="stat-chip">最終支持率：<b>'+state.support+'</b> / 100</div>'+
+      '</div>'+
+      finalCommentsHTML()+
+      '<div class="dial-title" style="color:var(--ink);">📈 街の温度の推移</div>'+
+      '<div class="history-row">'+barsHTML+'</div>'+
+      '<div class="history-labels">'+labels+'</div>'+
+      focusLogReflectHTML()+
+      reflectSectionHTML()+
+      '<div class="lead" style="margin-top:22px;">今日は本当にお疲れ様でした！<br>ゲームを通して分かった通り、<b>「誰にとっても100点満点」の完璧な政策はありません。</b><br>企業を応援すれば物価が上がりやすくなり、物価を守ろうとすれば企業の挑戦が慎重になる。だからこそ日本銀行は、銀行を通じて街のいろいろな人の声を聞きながら、毎日バランスを取り続けているのです。</div>'+
+      '<div class="cta-row"><button class="ghost" id="restartBtn">もう一度、総裁に挑戦する</button></div>'+
+    '</div>';
+  }
+
+  function focusLogReflectHTML(){
+    if (!state.focusLog || state.focusLog.length === 0) return "";
+    var rows = state.focusLog.map(function(entry){
+      var noteHtml = entry.note
+        ? '<span class="focus-log-note">'+escapeHtml(entry.note)+'</span>'
+        : '<span class="focus-log-note muted">（メモなし）</span>';
+      return '<div class="focus-log-row"><b>R'+entry.round+'　'+entry.em+' '+entry.name+'</b>'+noteHtml+'</div>';
+    }).join("");
+    return ''+
+    '<div class="reflect-section">'+
+      '<div class="fc-title">🤝 ラウンドごとに寄り添った人たち</div>'+
+      '<div class="reflect-lead">毎回選んだ「気になった人」の記録です。</div>'+
+      '<div class="focus-log-list">'+rows+'</div>'+
+      '<div class="reflect-q">全体を通して、一番心に残った「寄り添い」はどれ？なぜそう思う？</div>'+
+      '<textarea class="reflect-textarea" id="focusSummary" placeholder="例：第3ラウンドでおじいちゃんに寄り添って、金利を上げて利息を増やしてあげられたのが良かった"></textarea>'+
+    '</div>';
+  }
+
+  function reflectSectionHTML(){
+    return ''+
+    '<div class="reflect-section">'+
+      '<div class="fc-title">📝 振り返りシート</div>'+
+      '<div class="reflect-lead">今日のプレイをふりかえって、思ったことを書いてみよう。書き終えたら下のボタンでシートを保存できます。</div>'+
+      '<div class="reflect-q">① 今日のプレイで印象に残ったことは？</div>'+
+      '<textarea class="reflect-textarea" id="refl1" placeholder="例：物価が思ったよりすぐに動いて驚いた…"></textarea>'+
+      '<div class="reflect-q">② 総裁として工夫した点は？</div>'+
+      '<textarea class="reflect-textarea" id="refl2" placeholder="例：急に動かしすぎないように、様子を見ながら判断した"></textarea>'+
+      '<div class="reflect-q">③ 次に挑戦するなら、どうしてみたい？</div>'+
+      '<textarea class="reflect-textarea" id="refl3" placeholder="例：もっと早めに手を打って、反動ショックを減らしたい"></textarea>'+
+      '<div class="cta-row" style="margin-top:12px;"><button class="ghost" id="downloadReflBtn">振り返りシートをダウンロードする 📥</button></div>'+
+      '<div class="reflect-note">テキストファイルとして保存されます。先生に提出したり、ノートに貼ったりして使ってください。</div>'+
+    '</div>';
+  }
+
+  function downloadReflection(){
+    var rank = computeRank();
+    var g = function(id){ var el = document.getElementById(id); return el ? el.value.trim() : ""; };
+    var t1 = g("refl1") || "（未記入）";
+    var t2 = g("refl2") || "（未記入）";
+    var t3 = g("refl3") || "（未記入）";
+    var lines = [
+      "総裁としての振り返りシート",
+      "==============================",
+      "最終ランク：" + rank.name + "（" + rank.sub + "）",
+      "適温クリア：" + state.coreHits + " / " + (TOTAL_MAIN_ROUNDS+1),
+      "反動ショック：" + state.reboundCount + " 回",
+      "最終支持率：" + state.support + " / 100",
+      "温度の推移：" + state.history.map(function(t){return Math.round(t)+"℃";}).join(" → "),
+      ""
+    ];
+    if (state.focusLog && state.focusLog.length > 0){
+      lines.push("---- ラウンドごとに寄り添った人たち ----");
+      state.focusLog.forEach(function(entry){
+        lines.push("R" + entry.round + "：" + entry.name + (entry.note ? "（" + entry.note + "）" : "（メモなし）"));
+      });
+      var fs = g("focusSummary") || "（未記入）";
+      lines.push("");
+      lines.push("一番心に残った寄り添いはどれ？なぜ？");
+      lines.push(fs);
+      lines.push("");
+    }
+    lines.push("---- ふりかえり ----");
+    lines.push("① 今日のプレイで印象に残ったことは？");
+    lines.push(t1);
+    lines.push("");
+    lines.push("② 総裁として工夫した点は？");
+    lines.push(t2);
+    lines.push("");
+    lines.push("③ 次に挑戦するなら、どうしてみたい？");
+    lines.push(t3);
+    lines.push("");
+    var content = lines.join("\n");
+    try{
+      var blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = "総裁振り返りシート.txt";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+    } catch(e){
+      window.alert("ダウンロードできませんでした。お手数ですが、テキストを選択してコピーしてください。");
+    }
+  }
+
+  /* ---------------------------------------------------------
+     BANK / TOWN VISUAL FX (money flow / rate lock / celebration)
+  --------------------------------------------------------- */
+  function centerPoint(el, hostRect){
+    var r = el.getBoundingClientRect();
+    return { x: r.left + r.width/2 - hostRect.left, y: r.top + r.height/2 - hostRect.top };
+  }
+
+  function spawnCoin(layer, fromPt, toPt, delay, emoji){
+    var coin = document.createElement("span");
+    coin.className = "fx-coin";
+    coin.textContent = emoji;
+    coin.style.left = fromPt.x + "px";
+    coin.style.top = fromPt.y + "px";
+    layer.appendChild(coin);
+    window.setTimeout(function(){
+      coin.style.transform = "translate("+(toPt.x-fromPt.x)+"px,"+(toPt.y-fromPt.y)+"px) scale(0.6)";
+      coin.style.opacity = "0";
+    }, 30 + delay);
+    window.setTimeout(function(){ if (coin.parentNode) coin.parentNode.removeChild(coin); }, delay + 950);
+  }
+
+  function spawnBadge(layer, pt, text, cls){
+    var b = document.createElement("div");
+    b.className = "fx-badge " + cls;
+    b.textContent = text;
+    b.style.left = pt.x + "px";
+    b.style.top = (pt.y - 46) + "px";
+    layer.appendChild(b);
+    window.setTimeout(function(){ if (b.parentNode) b.parentNode.removeChild(b); }, 1850);
+  }
+
+  function playBankFX(req){
+    var host = document.querySelector(".fx-host");
+    var fxLayer = document.querySelector(".fx-layer");
+    var plazaEl = document.querySelector("[data-plaza]");
+    var bankEl = document.querySelector("[data-bankhub]");
+    if (!host || !fxLayer || !plazaEl || !bankEl) return;
+
+    var hostRect = host.getBoundingClientRect();
+    var plazaPt = centerPoint(plazaEl, hostRect);
+    var bankPt = centerPoint(bankEl, hostRect);
+
+    if (req.rate === "up"){
+      bankEl.classList.add("pulse-red");
+      spawnBadge(fxLayer, bankPt, "🔒 借りづらい…", "badge-red");
+    } else if (req.rate === "down"){
+      bankEl.classList.add("pulse-green");
+      spawnBadge(fxLayer, bankPt, "🔓 借りやすい！", "badge-green");
+    }
+
+    if (req.op === "buy"){
+      for (var i=0;i<4;i++){ spawnCoin(fxLayer, plazaPt, bankPt, i*140, "💴"); }
+    } else if (req.op === "sell"){
+      for (var j=0;j<3;j++){ spawnCoin(fxLayer, bankPt, plazaPt, j*150, "💴"); }
+    }
+  }
+
+  function playCelebration(){
+    var host = document.querySelector(".fx-host");
+    var fxLayer = document.querySelector(".fx-layer");
+    var plazaEl = document.querySelector("[data-plaza]");
+    if (!host || !fxLayer || !plazaEl) return;
+    var hostRect = host.getBoundingClientRect();
+    var pt = centerPoint(plazaEl, hostRect);
+    plazaEl.classList.add("pulse-gold");
+    var sparks = ["✨","🎉","🌟","✨","🎊","⭐"];
+    sparks.forEach(function(sp, idx){
+      var angle = (idx / sparks.length) * Math.PI * 2;
+      var dist = 46 + Math.random()*18;
+      var toPt = { x: pt.x + Math.cos(angle)*dist, y: pt.y + Math.sin(angle)*dist };
+      var el = document.createElement("span");
+      el.className = "fx-spark";
+      el.textContent = sp;
+      el.style.left = pt.x + "px";
+      el.style.top = pt.y + "px";
+      fxLayer.appendChild(el);
+      window.setTimeout(function(){
+        el.style.transform = "translate("+(toPt.x-pt.x)+"px,"+(toPt.y-pt.y)+"px) scale(1.1)";
+        el.style.opacity = "0";
+      }, 30 + idx*40);
+      window.setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); }, 900);
+    });
+  }
+
+  /* ---------------------------------------------------------
+     MAIN RENDER + WIRE
+  --------------------------------------------------------- */
+  function render(){
+    var app = document.getElementById("app");
+    var html = '<div class="brandbar"><div class="line"></div>日本銀行 総裁シミュレーションRPG<div class="line"></div></div>';
+    if (state.screen === "title") html += renderTitle();
+    else if (state.screen === "town") html += renderTown();
+    else if (state.screen === "gameover") html += renderGameover();
+    else if (state.screen === "result") html += renderResult();
+    html += '<div class="footer-note">小学校 金融教育シミュレーション「日銀マネー・ループ」RPG版</div>';
+    app.innerHTML = html;
+    wire();
+    if (state.fxRequest){
+      var req = state.fxRequest;
+      state.fxRequest = null;
+      playBankFX(req);
+    }
+    if (state.justHitCore){
+      state.justHitCore = false;
+      playCelebration();
+    }
+  }
+
+  function wire(){
+    if (state.screen === "title"){
+      document.querySelectorAll(".diff-btn").forEach(function(b){
+        b.onclick = function(){
+          state.difficulty = b.getAttribute("data-diff");
+          render();
+        };
+      });
+      document.getElementById("startBtn").onclick = function(){
+        initCharsForDifficulty();
+        state.screen="town"; state.phase="mainSelect"; render();
+      };
+      return;
+    }
+    if (state.screen === "gameover"){
+      document.getElementById("retryBtn").onclick = function(){ state = freshState(state.difficulty); render(); };
+      return;
+    }
+    if (state.screen === "result"){
+      document.getElementById("restartBtn").onclick = function(){ state = freshState(state.difficulty); render(); };
+      var dlBtn = document.getElementById("downloadReflBtn");
+      if (dlBtn) dlBtn.onclick = downloadReflection;
+      return;
+    }
+    if (state.screen !== "town") return;
+
+    if (state.phase === "mainSelect"){
+      var schemaBtn = document.getElementById("schemaToggleBtn");
+      if (schemaBtn) schemaBtn.onclick = function(){ state.showSchema = !state.showSchema; render(); };
+      document.querySelectorAll('[data-dial="rate"] .cmd-row').forEach(function(b){
+        b.onclick = function(){ state.rateChoice = b.getAttribute("data-key"); render(); };
+      });
+      document.querySelectorAll('[data-dial="op"] .cmd-row').forEach(function(b){
+        b.onclick = function(){ state.opChoice = b.getAttribute("data-key"); render(); };
+      });
+      var btn = document.getElementById("decideBtn");
+      if (btn && !btn.disabled) btn.onclick = resolveRound;
+    }
+    else if (state.phase === "mainResult"){
+      wireFocusPicker();
+      var nextBtn = document.getElementById("nextBtn");
+      if (nextBtn && !nextBtn.disabled){
+        nextBtn.onclick = function(){
+          commitFocusPick();
+          if (state.round < TOTAL_MAIN_ROUNDS){
+            state.round += 1; state.rateChoice = null; state.opChoice = null; state.phase = "mainSelect";
+            state.lastStagnation = false;
+          } else {
+            startEvent();
+          }
+          render();
+        };
+      }
+    }
+    else if (state.phase === "eventIntro"){
+      document.getElementById("eventContinueBtn").onclick = function(){ state.phase = "eventChoice"; render(); };
+    }
+    else if (state.phase === "eventChoice"){
+      document.querySelectorAll(".event-choice").forEach(function(b){
+        b.onclick = function(){ state.eventChoiceKey = b.getAttribute("data-choice"); resolveEvent(); };
+      });
+    }
+    else if (state.phase === "eventResult"){
+      wireFocusPicker();
+      var resultBtn = document.getElementById("resultBtn");
+      if (resultBtn && !resultBtn.disabled){
+        resultBtn.onclick = function(){
+          commitFocusPick();
+          state.screen = "result";
+          render();
+        };
+      }
+    }
+  }
+
+  function wireFocusPicker(){
+    document.querySelectorAll(".focus-round-block .focus-btn").forEach(function(b){
+      b.onclick = function(){
+        var noteEl = document.getElementById("focusNoteInput");
+        if (noteEl) state.roundFocusNote = noteEl.value;
+        state.roundFocusChoice = b.getAttribute("data-focus");
+        render();
+      };
+    });
+  }
+
+  function commitFocusPick(){
+    var noteEl = document.getElementById("focusNoteInput");
+    var note = noteEl ? noteEl.value.trim() : (state.roundFocusNote || "");
+    if (state.roundFocusChoice && CHAR_META[state.roundFocusChoice]){
+      state.focusLog.push({
+        round: state.round,
+        id: state.roundFocusChoice,
+        name: CHAR_META[state.roundFocusChoice].name,
+        em: CHAR_META[state.roundFocusChoice].em,
+        note: note
+      });
+    }
+    state.roundFocusChoice = null;
+    state.roundFocusNote = "";
+  }
+
+  /* ---------------------------------------------------------
+     GAME LOGIC
+  --------------------------------------------------------- */
+  function applySupportAndTally(reactionsMap){
+    var happy=0, sad=0;
+    Object.keys(reactionsMap).forEach(function(id){
+      var m = reactionsMap[id].mood;
+      if (state.charTally[id]) state.charTally[id][m] += 1;
+      if (m === "happy") happy++;
+      else if (m === "sad") sad++;
+    });
+    var delta = (happy - sad) * 4;
+    state.support = clamp(state.support + delta, 0, 100);
+  }
+
+  function checkFail(){
+    if (state.temp <= 5 || state.temp >= 45){ state.gameoverReason = "temp"; state.screen = "gameover"; return true; }
+    if (state.support <= 0){ state.gameoverReason = "support"; state.screen = "gameover"; return true; }
+    return false;
+  }
+
+  function updateBankStats(rateKey, opKey){
+    if (rateKey === "down") state.bankRate = clamp(state.bankRate - 0.4, 0.1, 6);
+    else if (rateKey === "up") state.bankRate = clamp(state.bankRate + 0.4, 0.1, 6);
+    if (opKey === "buy") state.bankReserve = clamp(state.bankReserve + 150, 0, 600);
+    else if (opKey === "sell") state.bankReserve = clamp(state.bankReserve - 150, 0, 600);
+    else state.bankReserve = clamp(state.bankReserve - 20, 0, 600);
+    state.lastOp = opKey;
+  }
+
+  function resolveRound(){
+    var reboundApplied = 0;
+    if (state.reboundQueued !== 0){
+      reboundApplied = state.reboundQueued;
+      state.temp += reboundApplied;
+      state.reboundQueued = 0;
+      state.reboundCount += 1;
+    }
+
+    var rateOpt = RATE_OPTIONS.filter(function(o){return o.key===state.rateChoice;})[0];
+    var opOpt = OP_OPTIONS.filter(function(o){return o.key===state.opChoice;})[0];
+    var delta = rateOpt.val + opOpt.val;
+
+    state.fxRequest = { rate: rateOpt.key, op: opOpt.key };
+    updateBankStats(rateOpt.key, opOpt.key);
+
+    // Hard mode: policy rate direction nudges the yen (forex), which feeds back into prices
+    var fxDrift = 0;
+    if (state.difficulty === "hard"){
+      if (rateOpt.key === "up") state.fx = clamp(state.fx + 1, -6, 6);
+      else if (rateOpt.key === "down") state.fx = clamp(state.fx - 1, -6, 6);
+      if (state.fx <= -4) fxDrift = 1;
+      else if (state.fx >= 4) fxDrift = -1;
+    }
+
+    // keep-streak tracking: repeated total inaction triggers a stagnation event
+    var isKeep = (rateOpt.key === "flat" && opOpt.key === "none");
+    state.keepStreak = isKeep ? state.keepStreak + 1 : 0;
+    var stagnation = false;
+    var stagnationShock = 0;
+    if (state.keepStreak >= 2){
+      stagnation = true;
+      stagnationShock = (Math.random() < 0.5 ? -1 : 1) * (2 + Math.floor(Math.random()*2));
+      state.support = clamp(state.support - 5, 0, 100);
+      state.keepStreak = 0;
+    }
+
+    var noise = Math.round((Math.random()*2 - 1)); // -1, 0, or 1
+    state.temp = state.temp + delta + noise + stagnationShock + fxDrift;
+
+    state.netBias += delta;
+    var zoneHit = (state.temp >= 23 && state.temp <= 27);
+    if (zoneHit){ state.coreHits += 1; state.coreStreak += 1; state.justHitCore = true; }
+    else state.coreStreak = 0;
+
+    if (Math.abs(delta) >= 7) state.reboundQueued = delta > 0 ? 3 : -3;
+
+    var z = zoneOf(state.temp);
+    var reactions = buildReactions(state.rateChoice, z.key, state.fx);
+    state.npcBubbles = reactions;
+    applySupportAndTally(reactions);
+
+    state.history.push(Math.round(state.temp*10)/10);
+
+    var fxText = fxDrift!==0 ? "（為替の影響でさらに "+(fxDrift>0?"+":"")+fxDrift+"℃ 動きました）" : "";
+    var moveText = (delta>=0? "施策により温度が "+delta+"℃ 上がりました。" : "施策により温度が "+Math.abs(delta)+"℃ 下がりました。");
+    var noiseText = noise!==0 ? "（街の自然な変動で "+(noise>0?"+":"")+noise+"℃ 動きました）" : "";
+    var reboundText = reboundApplied!==0 ? "⚡<b>反動ショック発生！</b>前のラウンドで急に動かしすぎた影響で、街が先に "+(reboundApplied>0?"+":"")+reboundApplied+"℃ 動いてしまいました。その上で、" : "";
+    var stagnationText = stagnation ? "😴<b>油断ショック！</b>様子見が続いたことで、街に予想外の変化（"+(stagnationShock>0?"+":"")+stagnationShock+"℃）が起きました。その上で、" : "";
+    state.lastReboundApplied = reboundApplied;
+    state.lastStagnation = stagnation;
+    state.lastNarration = reboundText + stagnationText + moveText + noiseText + fxText + " " + z.text;
+
+    state.rateChoice = null; state.opChoice = null;
+
+    if (checkFail()){ render(); return; }
+
+    state.phase = "mainResult";
+    render();
+  }
+
+  function startEvent(){
+    var pool = state.difficulty === "hard" ? EVENT_CARDS_HARD : EVENT_CARDS_NORMAL;
+    var card = pool[Math.floor(Math.random()*pool.length)];
+    state.eventCard = card;
+    state.round = TOTAL_MAIN_ROUNDS + 1;
+    state.temp = card.shockTemp;
+    if (state.difficulty === "hard" && card.fxShock){
+      state.fx = clamp(state.fx + card.fxShock, -6, 6);
+    }
+    state.history.push(state.temp);
+    state.support = clamp(state.support - 4, 0, 100);
+    state.phase = "eventIntro";
+    if (checkFail()) { render(); return; }
+    render();
+  }
+
+  function resolveEvent(){
+    var card = state.eventCard;
+    var choice = card.choices[state.eventChoiceKey];
+    state.fxRequest = { rate: choice.policyRate || "flat", op: choice.policyOp || "none" };
+    updateBankStats(choice.policyRate || "flat", choice.policyOp || "none");
+    if (state.difficulty === "hard" && choice.fxShift){
+      state.fx = clamp(state.fx + choice.fxShift, -6, 6);
+    }
+    state.temp = choice.resultTemp;
+    var zoneHit = (state.temp >= 23 && state.temp <= 27);
+    if (zoneHit){ state.coreHits += 1; state.justHitCore = true; }
+    state.history.push(state.temp);
+
+    var reactions = {};
+    Object.keys(choice.reactions).forEach(function(id){
+      reactions[id] = { mood: choice.reactions[id][0], text: choice.reactions[id][1] };
+    });
+    charOrder().forEach(function(id){ if (!reactions[id]) reactions[id] = { mood:"neutral", text:"街の様子を見守っています。" }; });
+    state.npcBubbles = reactions;
+    applySupportAndTally(reactions);
+
+    if (checkFail()){ render(); return; }
+
+    state.phase = "eventResult";
+    render();
+  }
+
+  render();
+})();
+
+</script>
+</body>
+</html>
