@@ -1,0 +1,20 @@
+{
+  "name": "mirakin-metal-deck",
+  "version": "1.0.0",
+  "description": "第1回 ミラキン業界研究会「金属業界」全41枚 PPTX 生成",
+  "main": "build.js",
+  "scripts": {
+    "assets": "node render_assets.js",
+    "build": "node render_assets.js && node build.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "pptxgenjs": "^4.0.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-icons": "^5.7.0",
+    "sharp": "^0.35.5"
+  }
+}
